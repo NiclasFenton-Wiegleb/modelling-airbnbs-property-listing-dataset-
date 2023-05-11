@@ -5,23 +5,13 @@ class DataCleaning():
     def remove_rows_with_missing_ratings(self, dataframe):
         '''Removes the rows with missing values for any of the ratings columns.'''
 
-        df_cleanliness_missing = dataframe[dataframe["Cleanliness_rating"].isnull()]
-        dataframe.drop(df_cleanliness_missing.index, inplace= True)
-
-        df_accuracy_missing = dataframe[dataframe["Accuracy_rating"].isnull()]
-        dataframe.drop(df_accuracy_missing.index, inplace= True)
-
-        df_communication_missing = dataframe[dataframe["Communication_rating"].isnull()]
-        dataframe.drop(df_communication_missing.index, inplace= True)
-
-        df_location_missing = dataframe[dataframe["Location_rating"].isnull()]
-        dataframe.drop(df_location_missing.index, inplace= True)
-
-        df_check_in_missing = dataframe[dataframe["Check-in_rating"].isnull()]
-        dataframe.drop(df_check_in_missing.index, inplace= True)
-
-        df_value_missing = dataframe[dataframe["Value_rating"].isnull()]
-        dataframe.drop(df_value_missing.index, inplace= True)
+        columns = ["Cleanliness_rating", "Accuracy_rating", 
+                   "Communication_rating", "Location_rating", 
+                   "Check-in_rating", "Value_rating"]
+        
+        for c in columns:
+            df_missing = dataframe[dataframe[c].isnull()]
+            dataframe.drop(df_missing.index, inplace= True)
 
         dataframe.drop("Unnamed: 19", axis= 1, inplace= True)
 
@@ -29,7 +19,8 @@ class DataCleaning():
 
 
     def combine_description_strings(self, dataframe):
-        #TODO - combine lists of strings in Description column (don't implement a from-scratch solution to parse the string into list)
+        '''Combines the lists of strings in the description column into sings string'''
+
         #Dropping any rows with missing descriptions
         df_missing_description = dataframe[dataframe["Description"].isna() == True]
         dataframe.drop(df_missing_description.index, inplace= True)
@@ -39,14 +30,15 @@ class DataCleaning():
         dataframe["Description"] = dataframe["Description"].str.replace('"', "")
         dataframe["Description"] = dataframe["Description"].str.replace("About this space,", "")
         dataframe["Description"] = dataframe["Description"].str.join("")
-        dataframe["Description"] = dataframe["Description"].astype("str")
 
         return dataframe
     
 
     def set_default_feature_value(self, dataframe):
-        #TODO - replace missing data entries in "guests", "beds", "bathrooms" and "bedrooms" columns with 1s
-        print("Setting default values.")
+        '''Replaces NaN in guest, beds, bathrooms and bedrooms columns with 1s'''
+
+        dataframe[["guests", "beds", "bathrooms", "bedrooms"]].fillna(1, inplace= True)
+
         return dataframe
     
 
@@ -66,5 +58,5 @@ if __name__ == "__main__":
 
     print(data.info())
 
-    # data.to_csv("clean_listing.csv")
+    data.to_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
 

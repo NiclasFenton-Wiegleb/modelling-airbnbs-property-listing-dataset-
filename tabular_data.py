@@ -49,14 +49,35 @@ def clean_tabular_data(dataframe):
     df = cleaner.set_default_feature_value(df)
     return df
 
+def load_airbnb(dataframe, label):
+    '''Removes columns containing text and returns the features and
+    selected label column as tuples of arrays (features, label)'''
+
+    #Drop all columns that contain text data
+    text_columns = dataframe.select_dtypes(include=["object"])
+    dataframe.drop(text_columns, axis= 1, inplace= True)
+
+    dataframe.drop("Unnamed: 0", axis= 1, inplace= True)
+
+    #Assign features and labels to be returned as tuples
+    labels = dataframe[label].to_numpy()
+    features = dataframe.drop(label, axis= 1).to_numpy()
+
+    tuples = []
+    
+    for idx in range(len(labels)):
+
+        tuples.append((features[idx], labels[idx]))
+
+    return tuples
+
 
 if __name__ == "__main__":
 
-    data = pd.read_csv("./airbnb-property-listings/tabular_data/listing.csv")
+    data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
 
-    data = clean_tabular_data(data)
+    data = load_airbnb(data, "Price_Night")
 
-    print(data.info())
+    print(data)
 
-    data.to_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
 

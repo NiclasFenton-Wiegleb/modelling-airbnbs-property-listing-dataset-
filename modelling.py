@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 import itertools
 from sklearn.model_selection import GridSearchCV
+import joblib
+import json
 
 def custom_tune_regression_model_hyperparameters(model_class, training_set, validation_set, test_set, param_dict):
     '''The function implements grid search from scratch on the selected model_class using every possible combination 
@@ -62,11 +64,38 @@ def tune_regression_model_hyperparameters(model_class, dataset, hyperparameters_
     grid_search = GridSearchCV(model, hyperparameters_dict, return_train_score= True)
     grid_search.fit(X, y)
 
-    performance_dict = grid_search.cv_results_
     best_param_dict = grid_search.best_params_
     best_model = grid_search.best_estimator_
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
+
+    X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
+    performance_dict = {
+            "training_RMSE": mean_squared_error(y_train, best_model.predict(X_train), squared= False),
+            "validation_RMSE": mean_squared_error(y_validation, best_model.predict(X_validation), squared= False),
+            "test_RMSE": mean_squared_error(y_test, best_model.predict(X_test), squared= False),
+            "test_R^2 score": r2_score(y_test, best_model.predict(X_test))
+            }
+
     return best_param_dict, best_model, performance_dict
+
+def save_model(model, hyperparameters: dict, performance_metrics: dict, directory: dir, name: str):
+    '''Saves the provided model, hyperparameters and performance_metrics in respective file formats
+    in the indicated directory.'''
+
+    #Saving the model
+    model_filename = f"{directory}/{name}.sav"
+    joblib.dump(model, model_filename)
+
+    #Saving the hyperparameters
+    hyperparameters_filename = f"{directory}/{name}_hyperparameters.json"
+    with open(hyperparameters_filename, "w") as f:
+        json.dump(hyperparameters, f)
+    
+    #Saving the performance metrics
+    performance_metrics_filename = f"{directory}/{name}_performance_metrics.json"
+    with open(performance_metrics_filename, "w") as f:
+        json.dump(performance_metrics, f)
 
 
 
@@ -78,16 +107,21 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
 
-    X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
+    filename = "./models/regression/SGDRegression.sav"
+    loaded_model = joblib.load(filename)
 
-    hyperparameters = {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
-                       "shuffle": [True, False]}
+    # X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
 
-    best_param_dict, model, performance_dict = tune_regression_model_hyperparameters(SGDRegressor, (X, y),
-                                                                                                hyperparameters)
-    print(best_param_dict)
-    print(model.score(X_test, y_test))
-    print(pd.DataFrame(performance_dict))
+    # hyperparameters = {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+    #                    "shuffle": [True, False]}
+
+    # best_param_dict, model, performance_dict = tune_regression_model_hyperparameters(SGDRegressor, (X, y), hyperparameters)
+
+    # save_model(model, best_param_dict, performance_dict, "./models/regression", "SGDRegression")
+
+    # print(best_param_dict)
+    print(loaded_model.score(X_test, y_test))
+    # print(performance_dict)
 
 
 

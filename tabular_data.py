@@ -37,9 +37,12 @@ class DataCleaning():
     def set_default_feature_value(self, dataframe):
         '''Replaces NaN in guest, beds, bathrooms and bedrooms columns with 1s'''
 
-        dataframe[["guests", "beds", "bathrooms", "bedrooms"]].fillna(1, inplace= True)
+        df_fillna = dataframe[["guests", "beds", "bathrooms", "bedrooms"]].fillna(1)
 
-        return dataframe
+        df = dataframe
+        df[["guests", "beds", "bathrooms", "bedrooms"]] = df_fillna
+
+        return df
     
 
 def clean_tabular_data(dataframe):
@@ -63,21 +66,17 @@ def load_airbnb(dataframe, label):
     labels = dataframe[label].to_numpy()
     features = dataframe.drop(label, axis= 1).to_numpy()
 
-    tuples = []
-    
-    for idx in range(len(labels)):
-
-        tuples.append((features[idx], labels[idx]))
-
-    return tuples
+    return (features, labels)
 
 
 if __name__ == "__main__":
 
-    data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+    data = pd.read_csv("./airbnb-property-listings/tabular_data/listing.csv")
 
-    data = load_airbnb(data, "Price_Night")
+    data = clean_tabular_data(data)
 
-    print(data)
+    data.to_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+
+    print(data.isna().sum())
 
 

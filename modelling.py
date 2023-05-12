@@ -3,11 +3,72 @@ import pandas as pd
 from sklearn.linear_model import SGDRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+import itertools
+from sklearn.model_selection import GridSearchCV
 
-def custom_tune_regression_model_hyperparameters(model, training_set, validation_set, test_set, param_dict):
-    #TODO code function
+def custom_tune_regression_model_hyperparameters(model_class, training_set, validation_set, test_set, param_dict):
+    '''The function implements grid search from scratch on the selected model_class using every possible combination 
+    of the provided hyperparameters and returns the best hyperparameter set, best model and a dictionary of the model's 
+    performance scores. It selects the best model based on the RMSE using the validation dataset. The performance scores 
+    include how well it perfoms on the test set.'''
 
-    return best_model, best_param_dict, perfomance_dict
+    X_train, y_train = training_set
+    X_test, y_test = test_set
+    X_validation, y_validation = validation_set
+
+    best_rmse = None
+    best_param_dict = None
+    best_model = None
+
+    keys, values = zip(*param_dict.items())
+
+    permutation_dicts = [dict(zip(keys, v)) for v in itertools.product(*values)]
+
+    for d in permutation_dicts:
+        model = model_class(**d)
+        model.fit(X_train, y_train)
+        
+        y_pred = model.predict(X_validation)
+
+        model_rmse = mean_squared_error(y_validation, y_pred, squared= False)
+
+        if best_rmse == None:
+            best_rmse = model_rmse
+            best_param_dict = d
+            best_model = model
+
+        elif model_rmse < best_rmse:
+            best_rmse = model_rmse
+            best_param_dict = d
+            best_model = model
+        
+        else: continue
+    
+    performance_dict = {
+            "training_RMSE": mean_squared_error(y_train, best_model.predict(X_train), squared= False),
+            "validation_RMSE": best_rmse,
+            "test_RMSE": mean_squared_error(y_test, best_model.predict(X_test), squared= False),
+            "test_R^2 score": r2_score(y_test, best_model.predict(X_test))
+            }
+
+    return best_param_dict, best_model, performance_dict
+
+
+def tune_regression_model_hyperparameters(model_class, dataset, hyperparameters_dict):
+    '''This function implements grid search for the best hyperparameters, using GridSearchCV from sklearn'''
+    
+    X, y = dataset
+    model = model_class()
+    grid_search = GridSearchCV(model, hyperparameters_dict, return_train_score= True)
+    grid_search.fit(X, y)
+
+    performance_dict = grid_search.cv_results_
+    best_param_dict = grid_search.best_params_
+    best_model = grid_search.best_estimator_
+
+    return best_param_dict, best_model, performance_dict
+
+
 
 if __name__ == "__main__":
 
@@ -17,28 +78,16 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
 
-    reg_model = SGDRegressor()
+    X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
 
-    reg_model.fit(X_train, y_train)
+    hyperparameters = {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+                       "shuffle": [True, False]}
 
-    y_pred_train = reg_model.predict(X_train)
-    y_pred = reg_model.predict(X_test)
-
-    #Calculating the RMSE and R^2 value for the training set
-    rmse_train = mean_squared_error(y_train, y_pred_train, squared= False)
-    r2_train = r2_score(y_train, y_pred_train)
-
-    #Calculating the RMSE and R^2 values for the test set
-    rmse_test = mean_squared_error(y_test, y_pred, squared= False)
-    r2_test = r2_score(y_test, y_pred)
-
-
-
-    print("The training RMSE of the model is ", rmse_train)
-    print("The test RMSE of hte model is ", rmse_test)
-
-    print("The R^2 value for the training set is ", r2_train)
-    print("The R^2 value for the test set is ", r2_test)
+    best_param_dict, model, performance_dict = tune_regression_model_hyperparameters(SGDRegressor, (X, y),
+                                                                                                hyperparameters)
+    print(best_param_dict)
+    print(model.score(X_test, y_test))
+    print(pd.DataFrame(performance_dict))
 
 
 

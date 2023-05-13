@@ -7,6 +7,8 @@ import itertools
 from sklearn.model_selection import GridSearchCV
 import joblib
 import json
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+
 
 def custom_tune_regression_model_hyperparameters(model_class, training_set, validation_set, test_set, param_dict):
     '''The function implements grid search from scratch on the selected model_class using every possible combination 
@@ -98,6 +100,45 @@ def save_model(model, hyperparameters: dict, performance_metrics: dict, director
         json.dump(performance_metrics, f)
 
 
+def choose_best_model_class(models_list):
+    '''This function takes a list of different model classes and a selection of associated
+    hyperparameter options, trains all combinations on the dataset, evaluates their performance and
+    returns the best overall model and corresponding hyperparameters'''
+    #TODO finish writing function
+
+    best_rmse = None
+    best_param_dict = None
+    best_model = None
+    best_model_type = None
+    best_performance_metrics = None
+
+    for d in models_list:
+
+        param_dict, model, performance_dict = tune_regression_model_hyperparameters(**d)
+
+        model_rmse = performance_dict["validation_RMSE"]
+
+        print("Model Type: ", type(model).__name__)
+        print("Hyperparameters: ", param_dict)
+
+        if best_rmse == None:
+            best_rmse = model_rmse
+            best_param_dict = param_dict
+            best_model = model
+            best_model_type = type(model).__name__
+            best_performance_metrics = performance_dict
+
+        elif model_rmse < best_rmse:
+            best_rmse = model_rmse
+            best_param_dict = param_dict
+            best_model = model
+            best_model_type = type(model).__name__
+            best_performance_metrics = performance_dict
+
+        else: continue
+
+
+    return best_model_type, best_model, best_param_dict, best_performance_metrics
 
 if __name__ == "__main__":
 
@@ -107,8 +148,48 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
 
-    filename = "./models/regression/SGDRegression.sav"
-    loaded_model = joblib.load(filename)
+    models_lst = [
+        {
+            "model_class": SGDRegressor,
+            "dataset": (X,y),
+            "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+                       "shuffle": [True, False]}
+        },
+        {
+            "model_class": RandomForestRegressor,
+            "dataset": (X, y),
+            "hyperparameters_dict": {
+                "n_estimators": [100, 150],
+                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+                "max_depth": [20, 50]
+            }
+        },
+        {
+            "model_class": GradientBoostingRegressor,
+            "dataset": (X, y),
+            "hyperparameters_dict": {
+                "loss": ["squared_error", "absolute_error", "huber"],
+                "learning_rate": [0.1, 0.2],
+                "n_estimators": [100, 150]
+            }
+        }
+
+    ]
+
+
+
+    best_model_type, best_model, best_param_dict, best_performance_metrics = choose_best_model_class(models_lst)
+
+    file_directory = "./models/regression"
+    file_name = best_model_type
+
+    save_model(best_model, best_param_dict, best_performance_metrics, file_directory, file_name)
+
+    print(best_model_type)
+    print(best_model.score(X_test, y_test))
+    print(best_param_dict)
+
+    # loaded_model = joblib.load(filename)
 
     # X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
 
@@ -119,9 +200,6 @@ if __name__ == "__main__":
 
     # save_model(model, best_param_dict, performance_dict, "./models/regression", "SGDRegression")
 
-    # print(best_param_dict)
-    print(loaded_model.score(X_test, y_test))
-    # print(performance_dict)
 
 
 

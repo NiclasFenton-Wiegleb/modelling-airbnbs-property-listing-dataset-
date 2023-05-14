@@ -88,4 +88,4 @@ And the performance metrics:
 - Training RMSE: 5.923
 - Validation RMSE: 0.0
 - Test RMSE: 4.826
-- Test R<sup>2<sup>: 0.999
+- Test R<sup>2<sup> : 0.999

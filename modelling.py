@@ -8,6 +8,8 @@ from sklearn.model_selection import GridSearchCV
 import joblib
 import json
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.tree import DecisionTreeRegressor
+import os
 
 
 def custom_tune_regression_model_hyperparameters(model_class, training_set, validation_set, test_set, param_dict):
@@ -100,11 +102,10 @@ def save_model(model, hyperparameters: dict, performance_metrics: dict, director
         json.dump(performance_metrics, f)
 
 
-def choose_best_model_class(models_list):
+def evaluate_all_models(models_list, directory: str):
     '''This function takes a list of different model classes and a selection of associated
     hyperparameter options, trains all combinations on the dataset, evaluates their performance and
     returns the best overall model and corresponding hyperparameters'''
-    #TODO finish writing function
 
     best_rmse = None
     best_param_dict = None
@@ -118,8 +119,13 @@ def choose_best_model_class(models_list):
 
         model_rmse = performance_dict["validation_RMSE"]
 
-        print("Model Type: ", type(model).__name__)
+        #Save each model to the indicated directory
+        file_name = type(model).__name__
+        save_model(model, param_dict, performance_dict, directory, file_name)
+
+        print("\nModel Type: ", type(model).__name__)
         print("Hyperparameters: ", param_dict)
+        print("Model RMSE: ", model_rmse)
 
         if best_rmse == None:
             best_rmse = model_rmse
@@ -140,66 +146,118 @@ def choose_best_model_class(models_list):
 
     return best_model_type, best_model, best_param_dict, best_performance_metrics
 
+def find_best_model(directory: str):
+    '''The function loads the performance metrics for each model saved in
+        the provided directory and selects the best one based on the validation_RMSE.
+        It loads the best model and returns it, along with the corresponding hyperparameters
+        and performance metrics.'''
+
+    dir_path = directory
+
+    files= []
+
+    #iterating through files in directory and adding 'performance_metrics' dictionary to list of files
+    for path in os.listdir(dir_path):
+        # check if current path is a file
+        if os.path.isfile(os.path.join(dir_path, path)):
+
+            #Select only files containing the performance metrics for each model
+            substring = "performance_metrics"
+            if substring in path:
+
+                #Load the performance metrics dictionary and append to list
+                file = json.load(open(os.path.join(dir_path, path)))
+                files.append((path, file))
+
+            else: continue
+    
+    #Initiatlise variables for model
+    best_rmse = None
+    best_model_name = None
+    best_performance_metrics = None
+
+    for tuple in files:
+
+        #Unpack validation RMSE for each model
+        performance_dict = tuple[1]
+        model_rmse = performance_dict["validation_RMSE"]
+
+        #Unpack model name
+        model_name = tuple[0].split("_")[0]
+
+        if best_rmse == None:
+            best_rmse = model_rmse
+            best_model_name = model_name
+            best_performance_metrics = performance_dict
+
+        elif model_rmse < best_rmse:
+            best_rmse = model_rmse
+            best_model_name = model_name
+            best_performance_metrics = performance_dict
+    
+    model_filename = f"{directory}/{best_model_name}.sav"
+    hyperparameters_filename = f"{directory}/{best_model_name}_hyperparameters.json"
+
+    best_model = joblib.load(model_filename)
+    best_hyperparameters = json.load(open(hyperparameters_filename))
+
+
+    return best_model, best_hyperparameters, best_performance_metrics
+
+
+
+
 if __name__ == "__main__":
 
-    data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+    directory = "./models/regression"
 
-    X, y = load_airbnb(data, "Price_Night")
+    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
+    # data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
 
-    models_lst = [
-        {
-            "model_class": SGDRegressor,
-            "dataset": (X,y),
-            "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
-                       "shuffle": [True, False]}
-        },
-        {
-            "model_class": RandomForestRegressor,
-            "dataset": (X, y),
-            "hyperparameters_dict": {
-                "n_estimators": [100, 150],
-                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
-                "max_depth": [20, 50]
-            }
-        },
-        {
-            "model_class": GradientBoostingRegressor,
-            "dataset": (X, y),
-            "hyperparameters_dict": {
-                "loss": ["squared_error", "absolute_error", "huber"],
-                "learning_rate": [0.1, 0.2],
-                "n_estimators": [100, 150]
-            }
-        }
+    # X, y = load_airbnb(data, "Price_Night")
 
-    ]
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
 
 
-
-    best_model_type, best_model, best_param_dict, best_performance_metrics = choose_best_model_class(models_lst)
-
-    file_directory = "./models/regression"
-    file_name = best_model_type
-
-    save_model(best_model, best_param_dict, best_performance_metrics, file_directory, file_name)
-
-    print(best_model_type)
-    print(best_model.score(X_test, y_test))
-    print(best_param_dict)
-
-    # loaded_model = joblib.load(filename)
-
-    # X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
-
-    # hyperparameters = {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+    # models_lst = [
+    #     {
+    #         "model_class": SGDRegressor,
+    #         "dataset": (X,y),
+    #         "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
     #                    "shuffle": [True, False]}
+    #     },
+    #     {
+    #         "model_class": RandomForestRegressor,
+    #         "dataset": (X, y),
+    #         "hyperparameters_dict": {
+    #             "n_estimators": [150, 200],
+    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+    #             "max_depth": [20, 50]
+    #         }
+    #     },
+    #     {
+    #         "model_class": GradientBoostingRegressor,
+    #         "dataset": (X, y),
+    #         "hyperparameters_dict": {
+    #             "loss": ["squared_error", "absolute_error", "huber"],
+    #             "learning_rate": [0.1, 0.2],
+    #             "n_estimators": [150, 200]
+    #         }
+    #     },
+    #     {
+    #         "model_class": DecisionTreeRegressor,
+    #         "dataset": (X, y),
+    #         "hyperparameters_dict": {
+    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+    #             "max_depth": [20, 50],
+    #             "splitter": ["best", "random"]
+    #         }
+    #     }
 
-    # best_param_dict, model, performance_dict = tune_regression_model_hyperparameters(SGDRegressor, (X, y), hyperparameters)
+    # ]
 
-    # save_model(model, best_param_dict, performance_dict, "./models/regression", "SGDRegression")
-
+    # best_model_type, best_model, best_param_dict, best_performance_metrics = evaluate_all_models(models_lst, directory)
 
 
 

@@ -57,14 +57,15 @@ def load_airbnb(dataframe, label):
     selected label column as tuples of arrays (features, label)'''
 
     #Drop all columns that contain text data
-    text_columns = dataframe.select_dtypes(include=["object"])
-    dataframe.drop(text_columns, axis= 1, inplace= True)
+    features_without_labels = dataframe.drop(label, axis= 1)
 
-    dataframe.drop("Unnamed: 0", axis= 1, inplace= True)
+    text_features = features_without_labels.select_dtypes(include=["object"])
+    features_df = features_without_labels.drop(text_features, axis= 1)
+    features_df = features_df.drop("Unnamed: 0", axis= 1)
 
     #Assign features and labels to be returned as tuples
     labels = dataframe[label].to_numpy()
-    features = dataframe.drop(label, axis= 1).to_numpy()
+    features = features_df.to_numpy()
 
     return (features, labels)
 

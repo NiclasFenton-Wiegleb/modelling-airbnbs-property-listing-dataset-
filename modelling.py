@@ -1,15 +1,36 @@
 from tabular_data import load_airbnb
 import pandas as pd
-from sklearn.linear_model import SGDRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.linear_model import SGDRegressor, LogisticRegression
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import mean_squared_error, r2_score, f1_score, precision_score, recall_score, accuracy_score
 import itertools
-from sklearn.model_selection import GridSearchCV
 import joblib
 import json
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 import os
+from sklearn import preprocessing
+import numpy as np
+
+def clf_key_performanc_measures(model, X_train, X_test, X_validation, y_train, y_validation, y_test ):
+    '''Returns performance metrics for a given classifier model.'''
+
+    classifier_performance = {
+        "f1_score_training": f1_score(y_train, model.predict(X_train), average= "micro"),
+        "f1_score_validation": f1_score(y_validation, model.predict(X_validation), average= "micro"),
+        "f1_score_test": f1_score(y_test, model.predict(X_test), average= "micro"),
+        "precision_score_training": precision_score(y_train, model.predict(X_train), average= "micro"),
+        "precision_score_validation": precision_score(y_validation, model.predict(X_validation), average= "micro"),
+        "precision_score_test": precision_score(y_test, model.predict(X_test), average= "micro"),
+        "recall_score_training": recall_score(y_train, model.predict(X_train), average= "micro"),
+        "recall_score_validation": recall_score(y_validation, model.predict(X_validation), average= "micro"),
+        "recall_score_test": recall_score(y_test, model.predict(X_test), average= "micro"),
+        "accuracy_score_training": accuracy_score(y_train, model.predict(X_train)),
+        "accuracy_score_validation": accuracy_score(y_validation, model.predict(X_validation)),
+        "accuracy_score_test": accuracy_score(y_test, model.predict(X_test))
+        }    
+    
+    return classifier_performance
 
 
 def custom_tune_regression_model_hyperparameters(model_class, training_set, validation_set, test_set, param_dict):
@@ -83,6 +104,28 @@ def tune_regression_model_hyperparameters(model_class, dataset, hyperparameters_
 
     return best_param_dict, best_model, performance_dict
 
+
+def tune_classification_model_hyperparameters(model_class, dataset, hyperparameters_dict):
+    '''This function implements grid search for the best hyperparameters, using GridSearchCV from sklearn'''
+    
+    X, y = dataset
+
+
+    model = model_class()
+    grid_search = GridSearchCV(model, hyperparameters_dict, scoring= "accuracy", cv = 5,return_train_score= True)
+    grid_search.fit(X, y)
+
+    best_param_dict = grid_search.best_params_
+    best_model = grid_search.best_estimator_
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
+    X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size= 0.2)
+
+    performance_dict = clf_key_performanc_measures(best_model,  X_train, X_test, X_validation, y_train, y_validation, y_test)
+
+    return best_param_dict, best_model, performance_dict
+
+
 def save_model(model, hyperparameters: dict, performance_metrics: dict, directory: dir, name: str):
     '''Saves the provided model, hyperparameters and performance_metrics in respective file formats
     in the indicated directory.'''
@@ -102,12 +145,12 @@ def save_model(model, hyperparameters: dict, performance_metrics: dict, director
         json.dump(performance_metrics, f)
 
 
-def evaluate_all_models(models_list, directory: str):
+def evaluate_all_models(models_list, tune_function, criterion: str, directory: str):
     '''This function takes a list of different model classes and a selection of associated
     hyperparameter options, trains all combinations on the dataset, evaluates their performance and
     returns the best overall model and corresponding hyperparameters'''
 
-    best_rmse = None
+    best_criterion = None
     best_param_dict = None
     best_model = None
     best_model_type = None
@@ -115,9 +158,9 @@ def evaluate_all_models(models_list, directory: str):
 
     for d in models_list:
 
-        param_dict, model, performance_dict = tune_regression_model_hyperparameters(**d)
+        param_dict, model, performance_dict = tune_function(**d)
 
-        model_rmse = performance_dict["validation_RMSE"]
+        model_criterion = performance_dict[criterion]
 
         #Save each model to the indicated directory
         file_name = type(model).__name__
@@ -125,17 +168,17 @@ def evaluate_all_models(models_list, directory: str):
 
         print("\nModel Type: ", type(model).__name__)
         print("Hyperparameters: ", param_dict)
-        print("Model RMSE: ", model_rmse)
+        print("Model criterion: ", model_criterion)
 
-        if best_rmse == None:
-            best_rmse = model_rmse
+        if best_criterion == None:
+            best_criterion = model_criterion
             best_param_dict = param_dict
             best_model = model
             best_model_type = type(model).__name__
             best_performance_metrics = performance_dict
 
-        elif model_rmse < best_rmse:
-            best_rmse = model_rmse
+        elif model_criterion < best_criterion:
+            best_criterion = model_criterion
             best_param_dict = param_dict
             best_model = model
             best_model_type = type(model).__name__
@@ -146,7 +189,7 @@ def evaluate_all_models(models_list, directory: str):
 
     return best_model_type, best_model, best_param_dict, best_performance_metrics
 
-def find_best_model(directory: str):
+def find_best_model(directory: str, criterion: str):
     '''The function loads the performance metrics for each model saved in
         the provided directory and selects the best one based on the validation_RMSE.
         It loads the best model and returns it, along with the corresponding hyperparameters
@@ -172,7 +215,7 @@ def find_best_model(directory: str):
             else: continue
     
     #Initiatlise variables for model
-    best_rmse = None
+    best_criterion = None
     best_model_name = None
     best_performance_metrics = None
 
@@ -180,18 +223,18 @@ def find_best_model(directory: str):
 
         #Unpack validation RMSE for each model
         performance_dict = tuple[1]
-        model_rmse = performance_dict["validation_RMSE"]
+        model_criterion = performance_dict[criterion]
 
         #Unpack model name
         model_name = tuple[0].split("_")[0]
 
-        if best_rmse == None:
-            best_rmse = model_rmse
+        if best_criterion == None:
+            best_criterion = model_criterion
             best_model_name = model_name
             best_performance_metrics = performance_dict
 
-        elif model_rmse < best_rmse:
-            best_rmse = model_rmse
+        elif model_criterion < best_criterion:
+            best_criterion = model_criterion
             best_model_name = model_name
             best_performance_metrics = performance_dict
     
@@ -205,59 +248,60 @@ def find_best_model(directory: str):
     return best_model, best_hyperparameters, best_performance_metrics
 
 
-
-
 if __name__ == "__main__":
 
-    directory = "./models/regression"
-
-    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory)
-
     # data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+    
+    # X, y = load_airbnb(data, "Category")
 
-    # X, y = load_airbnb(data, "Price_Night")
+    # label_encoder = preprocessing.LabelEncoder()
 
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.2)
+    # label_encoder.fit(y)
+    # y_transform = label_encoder.transform(y)
 
-
-    # models_lst = [
+    # model_list = [
     #     {
-    #         "model_class": SGDRegressor,
-    #         "dataset": (X,y),
-    #         "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
-    #                    "shuffle": [True, False]}
-    #     },
-    #     {
-    #         "model_class": RandomForestRegressor,
-    #         "dataset": (X, y),
+    #         "model_class": RandomForestClassifier,
+    #         "dataset": (X, y_transform),
     #         "hyperparameters_dict": {
     #             "n_estimators": [150, 200],
-    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+    #             "criterion": ["gini", "entropy", "log_loss"],
     #             "max_depth": [20, 50]
     #         }
     #     },
     #     {
-    #         "model_class": GradientBoostingRegressor,
-    #         "dataset": (X, y),
+    #         "model_class": GradientBoostingClassifier,
+    #         "dataset": (X, y_transform),
     #         "hyperparameters_dict": {
-    #             "loss": ["squared_error", "absolute_error", "huber"],
+    #             "loss": ["log_loss", "deviance", "exponential"],
     #             "learning_rate": [0.1, 0.2],
     #             "n_estimators": [150, 200]
     #         }
     #     },
     #     {
-    #         "model_class": DecisionTreeRegressor,
-    #         "dataset": (X, y),
+    #         "model_class": DecisionTreeClassifier,
+    #         "dataset": (X, y_transform),
     #         "hyperparameters_dict": {
-    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+    #             "criterion": ["gini", "entropy", "log_loss"],
     #             "max_depth": [20, 50],
-    #             "splitter": ["best", "random"]
+    #             "min_samples_split": [0.1, 0.15, 0.2]
+    #         }
+    #     },
+    #     {   "model_class": LogisticRegression,
+    #         "dataset": (X, y_transform),
+    #         "hyperparameters_dict":{
+    #             "penalty": ["l1", "l2", "elasticnet"],
+    #             "dual": [True, False],
+    #             "random_state": [0],
+    #             "solver": ["lbfgs", "liblinear", "newton-cg"]
     #         }
     #     }
-
     # ]
 
-    # best_model_type, best_model, best_param_dict, best_performance_metrics = evaluate_all_models(models_lst, directory)
+    directory = "./models/classification"
 
+    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "accuracy_score_validation")
 
-
+    print(type(best_model).__name__)
+    print(best_hyperparameters)
+    print(best_performance_metrics )

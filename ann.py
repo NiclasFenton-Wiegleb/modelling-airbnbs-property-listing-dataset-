@@ -10,15 +10,14 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from torch.utils.tensorboard import SummaryWriter
 import yaml
-import itertools
+import itertools, os, json
 from sklearn.metrics import mean_squared_error, r2_score, f1_score, precision_score, recall_score, accuracy_score
 
 class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __init__(self):
         super().__init__()
         data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
-        self.X, self.y = tabular_data.load_airbnb(data, "Price_Night")
-
+        self.X, self.y = tabular_data.load_airbnb(data, "bedrooms")
 
     def __getitem__(self, index):
         return (self.X[index], self.y[index])
@@ -35,7 +34,7 @@ class ANNModel(torch.nn.Module):
         self.model_depth = model_depth
         self.nn_list= [torch.nn.Linear(self.hidden_layer_width, self.hidden_layer_width) for i in range(self.model_depth) ]
         self.hidden = torch.nn.ModuleList()
-        self.hidden.append(torch.nn.Linear(9, self.hidden_layer_width))
+        self.hidden.append(torch.nn.Linear(11, self.hidden_layer_width))
         for i in range(self.model_depth):
             # self.hidden.append(torch.nn.ReLU())
             self.hidden.append(torch.nn.Linear(self.hidden_layer_width, self.hidden_layer_width))
@@ -81,7 +80,7 @@ def train_model(model_class, dataloader, dataloader_val, batch_size, nn_config, 
             }
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    writer = SummaryWriter("./models/ANN/tensorboard/regression/{}".format(current_time))
+    writer = SummaryWriter("./models/ANN/tensorboard/regression/n_bedrooms/{}".format(current_time))
     writer.add_custom_scalars(layout)
 
     for epoch in range(n_epochs):
@@ -196,11 +195,10 @@ def get_nn_config(yaml_config_file):
 def get_model_inference_latency(model, dataset):
 
     x, y = dataset
-    x_tensor = torch.from_numpy(x).float()
 
     start_timer = time.time()
     
-    y_pred = model(x_tensor)
+    y_pred = model(x)
 
     end_timer = time.time()
 
@@ -222,7 +220,7 @@ def find_best_nn(hyperparameter_dict, model_class, dataloader, dataloader_val, b
     given the provided hyperparameters. A series of model using the given parameters
     are then trained and saved.'''
 
-    normaliser = torch.nn.BatchNorm1d(9)
+    normaliser = torch.nn.BatchNorm1d(11)
 
     #Unpack datasets for performance evaluation
     X_train, y_train = training_data
@@ -278,7 +276,81 @@ def find_best_nn(hyperparameter_dict, model_class, dataloader, dataloader_val, b
                             performance_metrics= performance_dict,
                             is_ANN = True,
                             name = "ANN_lr")
-        
+
+def load_best_model(directory, criterion):
+    '''The function loads the performance metrics for each model saved in
+    the provided directory and selects the best one based on the validation_RMSE.
+    It loads the best model and returns it, along with the corresponding hyperparameters
+    and performance metrics.'''
+
+    dir_path = directory
+
+    folders = []
+
+    #iterating through folders in directory and adding 'performance_metrics' dictionary to list of files
+    for path in os.listdir(dir_path):
+        folders.append(os.path.join(dir_path, path))
+
+    performance_files= []
+    hyperparameter_files = []
+    model_files = []
+
+    # iterating through files in directory and adding 'performance_metrics' dictionary to list of files
+    for dir in folders:
+        for path in os.listdir(dir):
+            # check if current path is a file
+            if os.path.isfile(os.path.join(dir, path)):
+
+                #Select only files containing the performance metrics for each model
+                performance_substring = "performance_metrics"
+                hyperparameters_substring = "hyperparameters"
+                model_substring = "ANN_lr.pt"
+
+                if performance_substring in path:
+                    #Load the performance metrics dictionary and append to list
+                    file = json.load(open(os.path.join(dir, path)))
+                    performance_files.append(file)
+                
+                elif hyperparameters_substring in path:
+                    #Load the hyperparameter dictionary and append to list
+                    file = json.load(open(os.path.join(dir, path)))
+                    hyperparameter_files.append(file)
+                
+                elif model_substring in path:
+                    #Load the model and append to list
+                    model = torch.load(os.path.join(dir, path))
+                    model_files.append(model)
+
+                else: continue
+
+    #Initiatlise variables for model
+    best_criterion = None
+    best_model_idx = None
+    best_performance_metrics = None
+
+    for i, file in enumerate(performance_files):
+
+        #Unpack validation RMSE for each model
+        performance_dict = file
+        model_criterion = performance_dict[criterion]
+
+        model_idx = i
+
+        if best_criterion == None:
+            best_criterion = model_criterion
+            best_model_idx = model_idx
+            best_performance_metrics = performance_dict
+
+        elif model_criterion > best_criterion:
+            best_criterion = model_criterion
+            best_model_idx = model_idx
+            best_performance_metrics = performance_dict
+
+    best_model = model_files[best_model_idx]
+    best_hyperparameters = hyperparameter_files[best_model_idx]
+    best_model_file_path = folders[best_model_idx]
+
+    return best_model, best_hyperparameters, best_performance_metrics, best_model_file_path
 
 if __name__ == "__main__":
     
@@ -291,7 +363,7 @@ if __name__ == "__main__":
     validation_data = list(zip(X_validation, y_validation))
     test_data = list(zip(X_test, y_test))
 
-    batch_size = 32
+    batch_size = 16
 
     train_loader = DataLoader(training_data, batch_size= batch_size, shuffle= True, drop_last= True)
     validation_loader = DataLoader(validation_data, batch_size= batch_size, shuffle= True, drop_last= True)
@@ -299,60 +371,27 @@ if __name__ == "__main__":
 
     hyperparameter_dict = {
         "optimiser": ["torch.optim.SGD", "torch.optim.Adam"],
-        "learning_rate": [0.0001, 0.001, 0.005],
-        "hidden_layer_width": [32, 128],
-        "model_depth": [10, 20],
-        "n_epochs": [15, 30, 60]
+        "learning_rate": [0.001, 0.002, 0.0005],
+        "hidden_layer_width": [16, 32],
+        "model_depth": [15, 30, 50],
+        "n_epochs": [30]
     }
 
-    find_best_nn(
-        hyperparameter_dict= hyperparameter_dict,
-        model_class= ANNModel,
-        dataloader= train_loader,
-        dataloader_val= validation_loader,
-        batch_size= batch_size,
-        training_data= (X_train, y_train),
-        validation_data= (X_validation, y_validation),
-        test_data= (X_test, y_test)
-    )
+    directory = "./models/ANN/regression/n_bedrooms"
 
-    # config_yaml = "nn_config.yaml"
+    best_model, best_hyperparameters, best_performance_metrics, filepath = load_best_model(directory= directory, criterion= "test_R^2 score")
 
-    # config_dict = get_nn_config(config_yaml)
+    print(best_hyperparameters)
+    print(best_performance_metrics)
+    print(filepath)
 
-    # model, training_time = train_model(model_class= ANNModel,
-    #                     dataloader= train_loader,
-    #                     dataloader_val= validation_loader,
-    #                     n_epochs= 80,
-    #                     batch_size= batch_size,
-    #                     nn_config= config_dict)
-    
-    # #Cast training, validation and test set as torch tensors float32 for
-    # #model evaluation in performance_dict
-    
-    # X_train_eval = torch.from_numpy(X_train)
-    # X_val_eval = torch.from_numpy(X_validation)
-    # X_test_eval = torch.from_numpy(X_test)
-
-    # y_train_eval = model(X_train_eval.float())
-    # y_val_eval = model(X_val_eval.float())
-    # y_test_eval = model(X_test_eval.float())
-
-    # performance_dict = {
-    #     "training_RMSE": mean_squared_error(y_train, y_train_eval.detach().numpy(), squared= False),
-    #     "validation_RMSE": mean_squared_error(y_validation, y_val_eval.detach().numpy(), squared= False),
-    #     "test_RMSE": mean_squared_error(y_test, y_test_eval.detach().numpy(), squared= False),
-    #     "training_R^2 score": r2_score(y_train, y_train_eval.detach().numpy()),
-    #     "validation_R^2 score": r2_score(y_validation, y_val_eval.detach().numpy()),
-    #     "test_R^2 score": r2_score(y_test, y_test_eval.detach().numpy()),
-    #     "training_duration": training_time,
-    #     "inference_latency (s)": get_model_inference_latency(model, (X_train, y_train))
-    #     }
-    
-    # print(performance_dict)
-    
-    # modelling.save_model(model= model,
-    #                      hyperparameters= config_dict,
-    #                      performance_metrics= performance_dict,
-    #                      is_ANN = True,
-    #                      name = "ANN_lr")
+    # find_best_nn(
+    #     hyperparameter_dict= hyperparameter_dict,
+    #     model_class= ANNModel,
+    #     dataloader= train_loader,
+    #     dataloader_val= validation_loader,
+    #     batch_size= batch_size,
+    #     training_data= (X_train, y_train),
+    #     validation_data= (X_validation, y_validation),
+    #     test_data= (X_test, y_test)
+    # )

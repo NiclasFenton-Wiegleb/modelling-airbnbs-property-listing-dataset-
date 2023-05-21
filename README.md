@@ -102,6 +102,7 @@ And the performance metrics:
 - Test RMSE: 4.826
 - Test R<sup>2</sup> : 0.999
 
+#CHECK BEST MODEL -> error in code selecting best model
 
 ## Classification Models
 
@@ -189,3 +190,19 @@ recall_score_test: 0.48484848484848486
 accuracy_score_training: 0.39759036144578314
 accuracy_score_validation: 0.4117647058823529
 accuracy_score_test: 0.48484848484848486
+
+#CHECK BEST MODEL -> error in code selecting best model
+
+## ANN Regression Model
+
+'''
+Update documentation:
+    - model architecture
+    - how it was used
+    - screenshots of tensorboard graphs
+    - show training for all models then focus in on best paramterised model
+    - use this link (https://alexlenail.me/NN-SVG/) to generate diagram of ANN
+    - Limitations of ANN
+    - Comparision to ML regression model
+
+'''

@@ -11,6 +11,11 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 import os
 from sklearn import preprocessing
 import numpy as np
+import torch
+from datetime import datetime
+from ann import ANNModel
+
+
 
 def clf_key_performanc_measures(model, X_train, X_test, X_validation, y_train, y_validation, y_test ):
     '''Returns performance metrics for a given classifier model.'''
@@ -126,23 +131,46 @@ def tune_classification_model_hyperparameters(model_class, dataset, hyperparamet
     return best_param_dict, best_model, performance_dict
 
 
-def save_model(model, hyperparameters: dict, performance_metrics: dict, directory: dir, name: str):
+def save_model(model, hyperparameters: dict, performance_metrics: dict, is_ANN: bool = False, name: str = "Model",directory: dir ="./models/", ):
     '''Saves the provided model, hyperparameters and performance_metrics in respective file formats
     in the indicated directory.'''
-
-    #Saving the model
-    model_filename = f"{directory}/{name}.sav"
-    joblib.dump(model, model_filename)
-
-    #Saving the hyperparameters
-    hyperparameters_filename = f"{directory}/{name}_hyperparameters.json"
-    with open(hyperparameters_filename, "w") as f:
-        json.dump(hyperparameters, f)
     
-    #Saving the performance metrics
-    performance_metrics_filename = f"{directory}/{name}_performance_metrics.json"
-    with open(performance_metrics_filename, "w") as f:
-        json.dump(performance_metrics, f)
+    #Check if model is ANN
+    if is_ANN == True:
+        #Create new directory for saving the model with
+        # current date and time as name
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_directory = "./models/ANN/regression/{}".format(current_time)
+        os.mkdir(new_directory)
+
+        #Save the model
+        filepath = f"{new_directory}/{name}.pt"
+        torch.save(model, filepath)
+
+        #Save the hyperparamters
+        hyperparameters_filename = f"{new_directory}/{name}_hyperparameters.json"
+        with open(hyperparameters_filename, "w") as f:
+            json.dump(hyperparameters, f)
+        
+        #Saving the performance metrics
+        performance_metrics_filename = f"{new_directory}/{name}_performance_metrics.json"
+        with open(performance_metrics_filename, "w") as f:
+            json.dump(performance_metrics, f)
+
+    if is_ANN == False:
+        #Saving the model
+        model_filename = f"{directory}/{name}.sav"
+        joblib.dump(model, model_filename)
+
+        #Saving the hyperparameters
+        hyperparameters_filename = f"{directory}/{name}_hyperparameters.json"
+        with open(hyperparameters_filename, "w") as f:
+            json.dump(hyperparameters, f)
+        
+        #Saving the performance metrics
+        performance_metrics_filename = f"{directory}/{name}_performance_metrics.json"
+        with open(performance_metrics_filename, "w") as f:
+            json.dump(performance_metrics, f)
 
 
 def evaluate_all_models(models_list, tune_function, criterion: str, directory: str):

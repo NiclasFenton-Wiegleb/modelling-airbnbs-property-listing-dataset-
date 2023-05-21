@@ -1,0 +1,6 @@
+---
+optimiser: torch.optim.Adam
+learning_rate: 0.001
+hidden_layer_width: 512
+model_depth: 10
+n_epochs: 30

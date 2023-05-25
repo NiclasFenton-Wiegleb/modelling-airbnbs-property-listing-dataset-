@@ -1,0 +1,1 @@
+{"training_RMSE": 97.9777203076943, "validation_RMSE": 113.50090740029943, "test_RMSE": 85.5223296905062, "training_R^2 score": 0.3807448403152529, "validation_R^2 score": 0.46047648033498756, "test_R^2 score": 0.29327318271650415, "training_duration": 109.96686291694641, "inference_latency (s)": 0.001855596899986267}

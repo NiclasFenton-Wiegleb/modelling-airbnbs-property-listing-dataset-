@@ -1,0 +1,1 @@
+{"training_RMSE": NaN, "validation_RMSE": NaN, "test_RMSE": NaN, "training_R^2 score": NaN, "validation_R^2 score": NaN, "test_R^2 score": NaN, "training_duration": 54.69168305397034, "inference_latency (s)": 0.0008690804243087769}

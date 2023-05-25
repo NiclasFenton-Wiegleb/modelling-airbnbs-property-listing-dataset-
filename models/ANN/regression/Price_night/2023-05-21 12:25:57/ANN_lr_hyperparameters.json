@@ -1,1 +1,0 @@
-{"optimiser": "torch.optim.SGD", "learning_rate": 0.0002, "hidden_layer_width": 16, "model_depth": 8, "n_epochs": 15}

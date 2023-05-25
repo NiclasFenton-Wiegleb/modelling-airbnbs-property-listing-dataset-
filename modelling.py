@@ -131,7 +131,7 @@ def tune_classification_model_hyperparameters(model_class, dataset, hyperparamet
     return best_param_dict, best_model, performance_dict
 
 
-def save_model(model, hyperparameters: dict, performance_metrics: dict, is_ANN: bool = False, name: str = "Model",directory: dir ="./models/", ):
+def save_model(model, hyperparameters: dict, performance_metrics: dict, label_variable, is_ANN: bool = False, name: str = "Model",directory: dir ="./models/", ):
     '''Saves the provided model, hyperparameters and performance_metrics in respective file formats
     in the indicated directory.'''
     
@@ -140,7 +140,7 @@ def save_model(model, hyperparameters: dict, performance_metrics: dict, is_ANN: 
         #Create new directory for saving the model with
         # current date and time as name
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        new_directory = "./models/ANN/regression/{}".format(current_time)
+        new_directory = "./models/ANN/regression/{}/{}".format(label_variable, current_time)
         os.mkdir(new_directory)
 
         #Save the model

@@ -137,7 +137,7 @@ hyperparameter_dict = {
 
 In this particular framework, the hiddenlayers are all the same size, for simplicity. You can find the architecture of the model trained to predict the price per night below:
 
-<img src="./models/ANN/nn.svg" style="width: 55vw; min-width: 330px;" alt="Alt text" title="Model architecture sketch">
+<img src="./models/ANN/nn.svg" style="width: 55vw; min-width:500px;" alt="Alt text" title="Model architecture sketch">
 
 *Note*: Due to spacing, the sketch only shows 5 hidden layers - in the actual model there are 50. Each layer is a linear regression layer and each layer uses a ReLU activation function.
 

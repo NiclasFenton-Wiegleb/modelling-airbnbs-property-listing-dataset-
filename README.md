@@ -2,18 +2,15 @@
 
 ## Description
 
-In this project the challenge is to create several Machine Learning and Deep Learning models that are trained on data and fulfill functions relevant to the Airbnb application. Please see below for a list of relevant dependancies and technologies used in throughout the project.
+In this project the challenge is to create several Machine Learning and Deep Learning models that are trained on data and fulfill functions relevant to the Airbnb application. Before reading the sections below regarding the training of ML and ANN models, please take a look at the Explorative Data Analysis that can be found in Airbnb_EDA.ipynb, which gives a better understanding of the dataset and the numerical and categorical data used for training.
 
-Dependencies:
-
-- Pandas
-- Numpy
-- Sklearn
-
-Technologies:
+Stack:
 
 - Python
+- Pandas
+- Numpy 
 - Sci-kit learn
+- PyTorch
 
 ## Cleaning the Data
 
@@ -39,7 +36,7 @@ TODO: Add visual investigation and use it to justify the selection of models eva
 
 '''
 
-The first challenge in this scenario is to find the best regression model that can fit the data - processed in the previous step - and predict the price per night of a listing based on the different ratings and stats (e.g. number of bedrooms) for each listing. To do this we implement grid search. The file modelling.py contains a function that implements grid search from scratch (custom_tune_regression_model_hyperparameters()) and a second that makes use of the sci-kit learn GridSearchCV class (tune_regression_model_hyperparameters()).
+The first challenge in this scenario is to find the best regression model that can fit the data - processed in the previous step - and predict the price per night of a listing, based on the different ratings and stats (e.g. number of bedrooms) for each listing. To do this we implement grid search. The file modelling.py contains a function that implements grid search from scratch (custom_tune_regression_model_hyperparameters()) and a second that makes use of the sci-kit learn GridSearchCV class (tune_regression_model_hyperparameters()).
 
 We provide the function with a list of dictionaries, each specifying a model class for our regression model that we want to train, as well as a range of hyperparameters associated with the model. The function then goes through all possible hyperparameter configurations for each model and saves the model of each type to the provided directory. We then return the overall best model, hyperparameters and the performance metrics of the model.
 
@@ -77,7 +74,9 @@ This is the list of models and hyperparameters that were evaluated:
             "hyperparameters_dict": {
                 "criterion": ["squared_error", "absolute_error", "friedman_mse"],
                 "max_depth": [20, 50],
-                "splitter": ["best", "random"]
+                "splitter": ["best", "random"],
+                "min_samples_leaf": [5, 10],
+                "random_state": [15]
             }
         }
     ]
@@ -85,24 +84,40 @@ This is the list of models and hyperparameters that were evaluated:
 
 The find_best_model function goes through all the models in a specified directory and loads the best one.
 
-*Note*: For consistancy, throughout the evaluation process, the Root Mean Squared Error (RMSE) for a validation dataset is used for comparing model performance.
+*Note*: For consistancy, throughout the evaluation process, the Root Mean Squared Error (RMSE) for the validation dataset is used to compare model performance.
 
-The best model found within the list above was of the DecisionTreeRegressor class.
+The best model found within the list above was of the RandomForestRegressor class.
 
 With the hyperparameters:
 
 - criterion: absolute error
-- max depth: 50
-- splitter: random
+- max depth: 20
+- n_estimators: 200
 
 And the performance metrics:
 
-- Training RMSE: 5.923
-- Validation RMSE: 0.0
-- Test RMSE: 4.826
-- Test R<sup>2</sup> : 0.999
+- Training RMSE: 38.08
+- Validation RMSE: 24.46
+- Test RMSE: 53.85
+- Test R<sup>2</sup> : 0.91
 
-#CHECK BEST MODEL -> error in code selecting best model
+One of the dangers of training ML models it overfitting, and some model classes are more prone to this than others. For example, in one of the earlier runs of the code, decision trees achieved a 0.0 validation RMSE, which is a strong indication that the model is overfitting. To counteract this, we introduce a minimum number of samples per leaf, which reduces the complexity of the generated tree. It is then harder for the algorithm to overfit. Ensemble models, for example random forest, also reduce the risk of overfitting further. Finally, another measure we can use is to increase the size of our dataset.
+
+In our case the random forest ensemble model performed best. The training, validation and test RMSEs are not too far apart, which indicates the model does well at generalising. Let's use a few examples to see how it performs:
+
+Example| #1 | #2 | #3 
+--- | --- | --- | --- 
+True values| 132.0 | 101.0 | 87.0
+--- | --- | --- | --- 
+Model Predictions| 136.49 | 86.12 | 121.68
+
+From the above, we can see that the predictions are slightly off, but overall the performance of the model is convincing!
+
+Next, let's look at classifying listings into the correct categories.
+
+
+
+
 
 ## Classification Models
 
@@ -191,7 +206,6 @@ accuracy_score_training: 0.39759036144578314
 accuracy_score_validation: 0.4117647058823529
 accuracy_score_test: 0.48484848484848486
 
-#CHECK BEST MODEL -> error in code selecting best model
 
 ## ANN Regression Model
 

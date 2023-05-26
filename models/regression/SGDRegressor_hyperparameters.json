@@ -1,1 +1,1 @@
-{"loss": "epsilon_insensitive", "shuffle": false}
+{"loss": "epsilon_insensitive", "max_iter": 1500, "shuffle": true}

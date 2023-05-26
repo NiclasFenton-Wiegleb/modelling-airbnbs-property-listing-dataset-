@@ -13,7 +13,7 @@ from sklearn import preprocessing
 import numpy as np
 import torch
 from datetime import datetime
-from ann import ANNModel
+# from ann import ANNModel
 
 
 
@@ -131,7 +131,7 @@ def tune_classification_model_hyperparameters(model_class, dataset, hyperparamet
     return best_param_dict, best_model, performance_dict
 
 
-def save_model(model, hyperparameters: dict, performance_metrics: dict, label_variable, is_ANN: bool = False, name: str = "Model",directory: dir ="./models/", ):
+def save_model(model, hyperparameters: dict, performance_metrics: dict, label_variable: str = None, is_ANN: bool = False, name: str = "Model",directory: dir ="./models/", ):
     '''Saves the provided model, hyperparameters and performance_metrics in respective file formats
     in the indicated directory.'''
     
@@ -192,7 +192,13 @@ def evaluate_all_models(models_list, tune_function, criterion: str, directory: s
 
         #Save each model to the indicated directory
         file_name = type(model).__name__
-        save_model(model, param_dict, performance_dict, directory, file_name)
+        save_model(model= model,
+                   hyperparameters= param_dict,
+                   performance_metrics= performance_dict,
+                   label_variable=None,
+                   is_ANN= False,
+                   name = file_name,
+                   directory= directory)
 
         print("\nModel Type: ", type(model).__name__)
         print("Hyperparameters: ", param_dict)
@@ -278,9 +284,49 @@ def find_best_model(directory: str, criterion: str):
 
 if __name__ == "__main__":
 
-    # data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+    data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
     
-    # X, y = load_airbnb(data, "Category")
+    X, y = load_airbnb(data, "Price_Night")
+
+
+    models_lst = [
+        {
+            "model_class": SGDRegressor,
+            "dataset": (X,y),
+            "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+                        "shuffle": [True, False],
+                        "max_iter": [1500, 2000]}
+        },
+        {
+            "model_class": RandomForestRegressor,
+            "dataset": (X, y),
+            "hyperparameters_dict": {
+                "n_estimators": [150, 200],
+                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+                "max_depth": [20, 50]
+            }
+        },
+        {
+            "model_class": GradientBoostingRegressor,
+            "dataset": (X, y),
+            "hyperparameters_dict": {
+                "loss": ["squared_error", "absolute_error", "huber"],
+                "learning_rate": [0.1, 0.2],
+                "n_estimators": [150, 200]
+            }
+        },
+        {
+            "model_class": DecisionTreeRegressor,
+            "dataset": (X, y),
+            "hyperparameters_dict": {
+                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
+                "max_depth": [20, 50],
+                "splitter": ["best", "random"],
+                "min_samples_leaf": [5, 10],
+                "random_state": [15]
+            }
+        }
+    ]
 
     # label_encoder = preprocessing.LabelEncoder()
 
@@ -326,10 +372,46 @@ if __name__ == "__main__":
     #     }
     # ]
 
-    directory = "./models/classification"
+    directory = "./models/regression"
 
-    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "accuracy_score_validation")
+    # best_model_type, best_model, best_hyperparameters, best_performance_metrics = evaluate_all_models(models_list= models_lst,
+    #                                                                         tune_function= tune_regression_model_hyperparameters,
+    #                                                                         criterion= "validation_RMSE",
+    #                                                                         directory= directory)
+
+
+
+    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "validation_RMSE")
 
     print(type(best_model).__name__)
     print(best_hyperparameters)
     print(best_performance_metrics )
+    print(best_model.n_features_in_)
+
+    example_1_x = X[3]
+    example_1_x = example_1_x.reshape(1,-1)
+
+    example_2_x = X[86]
+    example_2_x = example_2_x.reshape(1,-1)
+
+    example_3_x = X[345]
+    example_3_x = example_3_x.reshape(1,-1)
+
+    example_1_y = y[3]
+    example_2_y = y[86]
+    example_3_y = y[345]
+
+    example_1_pred = best_model.predict(example_1_x)
+    example_2_pred = best_model.predict(example_2_x)
+    example_3_pred = best_model.predict(example_3_x)
+
+    print(example_1_y)
+    print(example_1_pred)
+    # print(example_1_x)
+    # print(best_model.n_features_in_)
+    # print(best_model.n_outputs_)
+
+    print(example_2_y)
+    print(example_2_pred)
+    print(example_3_y)
+    print(example_3_pred)

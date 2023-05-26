@@ -214,20 +214,6 @@ R<sup>2</sup> score| -0.02 | -0.01 | -0.01
 However, we still can't beat the ML model from the first section.
 
 
-
-
-'''
-Update documentation:
-    - model architecture
-    - how it was used
-    - screenshots of tensorboard graphs
-    - show training for all models then focus in on best paramterised model
-    - use this link (https://alexlenail.me/NN-SVG/) to generate diagram of ANN
-    - Limitations of ANN
-    - Comparision to ML regression model
-
-'''
-
 ## Apendix
 
 ### Regression

@@ -13,6 +13,8 @@ from sklearn import preprocessing
 import numpy as np
 import torch
 from datetime import datetime
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 # from ann import ANNModel
 
 
@@ -117,7 +119,7 @@ def tune_classification_model_hyperparameters(model_class, dataset, hyperparamet
 
 
     model = model_class()
-    grid_search = GridSearchCV(model, hyperparameters_dict, scoring= "accuracy", cv = 5,return_train_score= True)
+    grid_search = GridSearchCV(model, hyperparameters_dict, scoring= "accuracy", cv = 10,return_train_score= True)
     grid_search.fit(X, y)
 
     best_param_dict = grid_search.best_params_
@@ -204,22 +206,40 @@ def evaluate_all_models(models_list, tune_function, criterion: str, directory: s
         print("Hyperparameters: ", param_dict)
         print("Model criterion: ", model_criterion)
 
-        if best_criterion == None:
-            best_criterion = model_criterion
-            best_param_dict = param_dict
-            best_model = model
-            best_model_type = type(model).__name__
-            best_performance_metrics = performance_dict
+        if "classification" in directory:
+            if best_criterion == None:
+                best_criterion = model_criterion
+                best_param_dict = param_dict
+                best_model = model
+                best_model_type = type(model).__name__
+                best_performance_metrics = performance_dict
 
-        elif model_criterion < best_criterion:
-            best_criterion = model_criterion
-            best_param_dict = param_dict
-            best_model = model
-            best_model_type = type(model).__name__
-            best_performance_metrics = performance_dict
+            elif model_criterion > best_criterion:
+                best_criterion = model_criterion
+                best_param_dict = param_dict
+                best_model = model
+                best_model_type = type(model).__name__
+                best_performance_metrics = performance_dict
 
-        else: continue
+            else: continue
 
+        else:
+
+            if best_criterion == None:
+                best_criterion = model_criterion
+                best_param_dict = param_dict
+                best_model = model
+                best_model_type = type(model).__name__
+                best_performance_metrics = performance_dict
+
+            elif model_criterion < best_criterion:
+                best_criterion = model_criterion
+                best_param_dict = param_dict
+                best_model = model
+                best_model_type = type(model).__name__
+                best_performance_metrics = performance_dict
+
+            else: continue
 
     return best_model_type, best_model, best_param_dict, best_performance_metrics
 
@@ -262,15 +282,27 @@ def find_best_model(directory: str, criterion: str):
         #Unpack model name
         model_name = tuple[0].split("_")[0]
 
-        if best_criterion == None:
-            best_criterion = model_criterion
-            best_model_name = model_name
-            best_performance_metrics = performance_dict
+        if "classification" in directory:
+            if best_criterion == None:
+                best_criterion = model_criterion
+                best_model_name = model_name
+                best_performance_metrics = performance_dict
 
-        elif model_criterion < best_criterion:
-            best_criterion = model_criterion
-            best_model_name = model_name
-            best_performance_metrics = performance_dict
+            elif model_criterion > best_criterion:
+                best_criterion = model_criterion
+                best_model_name = model_name
+                best_performance_metrics = performance_dict
+        
+        else:
+            if best_criterion == None:
+                best_criterion = model_criterion
+                best_model_name = model_name
+                best_performance_metrics = performance_dict
+
+            elif model_criterion < best_criterion:
+                best_criterion = model_criterion
+                best_model_name = model_name
+                best_performance_metrics = performance_dict
     
     model_filename = f"{directory}/{best_model_name}.sav"
     hyperparameters_filename = f"{directory}/{best_model_name}_hyperparameters.json"
@@ -286,132 +318,141 @@ if __name__ == "__main__":
 
     data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
     
-    X, y = load_airbnb(data, "Price_Night")
+    X, y = load_airbnb(data, "Category")
 
-
-    models_lst = [
-        {
-            "model_class": SGDRegressor,
-            "dataset": (X,y),
-            "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
-                        "shuffle": [True, False],
-                        "max_iter": [1500, 2000]}
-        },
-        {
-            "model_class": RandomForestRegressor,
-            "dataset": (X, y),
-            "hyperparameters_dict": {
-                "n_estimators": [150, 200],
-                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
-                "max_depth": [20, 50]
-            }
-        },
-        {
-            "model_class": GradientBoostingRegressor,
-            "dataset": (X, y),
-            "hyperparameters_dict": {
-                "loss": ["squared_error", "absolute_error", "huber"],
-                "learning_rate": [0.1, 0.2],
-                "n_estimators": [150, 200]
-            }
-        },
-        {
-            "model_class": DecisionTreeRegressor,
-            "dataset": (X, y),
-            "hyperparameters_dict": {
-                "criterion": ["squared_error", "absolute_error", "friedman_mse"],
-                "max_depth": [20, 50],
-                "splitter": ["best", "random"],
-                "min_samples_leaf": [5, 10],
-                "random_state": [15]
-            }
-        }
-    ]
-
-    # label_encoder = preprocessing.LabelEncoder()
-
-    # label_encoder.fit(y)
-    # y_transform = label_encoder.transform(y)
-
-    # model_list = [
+    # models_lst = [
     #     {
-    #         "model_class": RandomForestClassifier,
-    #         "dataset": (X, y_transform),
+    #         "model_class": SGDRegressor,
+    #         "dataset": (X,y),
+    #         "hyperparameters_dict": {"loss": ["squared_error","huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+    #                     "shuffle": [True, False],
+    #                     "max_iter": [1500, 2000]}
+    #     },
+    #     {
+    #         "model_class": RandomForestRegressor,
+    #         "dataset": (X, y),
     #         "hyperparameters_dict": {
     #             "n_estimators": [150, 200],
-    #             "criterion": ["gini", "entropy", "log_loss"],
+    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
     #             "max_depth": [20, 50]
     #         }
     #     },
     #     {
-    #         "model_class": GradientBoostingClassifier,
-    #         "dataset": (X, y_transform),
+    #         "model_class": GradientBoostingRegressor,
+    #         "dataset": (X, y),
     #         "hyperparameters_dict": {
-    #             "loss": ["log_loss", "deviance", "exponential"],
+    #             "loss": ["squared_error", "absolute_error", "huber"],
     #             "learning_rate": [0.1, 0.2],
     #             "n_estimators": [150, 200]
     #         }
     #     },
     #     {
-    #         "model_class": DecisionTreeClassifier,
-    #         "dataset": (X, y_transform),
+    #         "model_class": DecisionTreeRegressor,
+    #         "dataset": (X, y),
     #         "hyperparameters_dict": {
-    #             "criterion": ["gini", "entropy", "log_loss"],
+    #             "criterion": ["squared_error", "absolute_error", "friedman_mse"],
     #             "max_depth": [20, 50],
-    #             "min_samples_split": [0.1, 0.15, 0.2]
-    #         }
-    #     },
-    #     {   "model_class": LogisticRegression,
-    #         "dataset": (X, y_transform),
-    #         "hyperparameters_dict":{
-    #             "penalty": ["l1", "l2", "elasticnet"],
-    #             "dual": [True, False],
-    #             "random_state": [0],
-    #             "solver": ["lbfgs", "liblinear", "newton-cg"]
+    #             "splitter": ["best", "random"],
+    #             "min_samples_leaf": [5, 10],
+    #             "random_state": [15]
     #         }
     #     }
     # ]
 
-    directory = "./models/regression"
+    label_encoder = preprocessing.LabelEncoder()
 
-    # best_model_type, best_model, best_hyperparameters, best_performance_metrics = evaluate_all_models(models_list= models_lst,
-    #                                                                         tune_function= tune_regression_model_hyperparameters,
-    #                                                                         criterion= "validation_RMSE",
+    label_encoder.fit(y)
+    y_transform = label_encoder.transform(y)
+
+    model_list = [
+        {
+            "model_class": RandomForestClassifier,
+            "dataset": (X, y_transform),
+            "hyperparameters_dict": {
+                "n_estimators": [150, 200],
+                "criterion": ["gini", "entropy", "log_loss"],
+                "max_depth": [20, 50]
+            }
+        },
+        {
+            "model_class": GradientBoostingClassifier,
+            "dataset": (X, y_transform),
+            "hyperparameters_dict": {
+                "loss": ["log_loss", "deviance", "exponential"],
+                "learning_rate": [0.1, 0.2],
+                "n_estimators": [150, 200]
+            }
+        },
+        {
+            "model_class": DecisionTreeClassifier,
+            "dataset": (X, y_transform),
+            "hyperparameters_dict": {
+                "criterion": ["gini", "entropy", "log_loss"],
+                "max_depth": [20, 50],
+                "min_samples_split": [0.1, 0.15, 0.2]
+            }
+        },
+        {   "model_class": LogisticRegression,
+            "dataset": (X, y_transform),
+            "hyperparameters_dict":{
+                "penalty": ["l1", "l2", "elasticnet"],
+                "dual": [True, False],
+                "random_state": [0],
+                "solver": ["lbfgs", "liblinear", "newton-cg"]
+            }
+        }
+    ]
+
+    directory = "./models/classification"
+
+    # best_model_type, best_model, best_hyperparameters, best_performance_metrics = evaluate_all_models(models_list= model_list,
+    #                                                                         tune_function= tune_classification_model_hyperparameters,
+    #                                                                         criterion= "accuracy_score_validation",
     #                                                                         directory= directory)
 
 
 
-    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "validation_RMSE")
+    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "accuracy_score_validation")
 
-    print(type(best_model).__name__)
-    print(best_hyperparameters)
-    print(best_performance_metrics )
-    print(best_model.n_features_in_)
-
-    example_1_x = X[3]
-    example_1_x = example_1_x.reshape(1,-1)
-
-    example_2_x = X[86]
-    example_2_x = example_2_x.reshape(1,-1)
-
-    example_3_x = X[345]
-    example_3_x = example_3_x.reshape(1,-1)
-
-    example_1_y = y[3]
-    example_2_y = y[86]
-    example_3_y = y[345]
-
-    example_1_pred = best_model.predict(example_1_x)
-    example_2_pred = best_model.predict(example_2_x)
-    example_3_pred = best_model.predict(example_3_x)
-
-    print(example_1_y)
-    print(example_1_pred)
-    # print(example_1_x)
+    # print(type(best_model).__name__)
+    # print(best_hyperparameters)
+    # print(best_performance_metrics )
     # print(best_model.n_features_in_)
-    # print(best_model.n_outputs_)
 
-    print(example_2_y)
-    print(example_2_pred)
-    print(example_3_y)
-    print(example_3_pred)
+    print(X.shape)
+
+    y_pred = best_model.predict(X)
+    cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)
+    disp = ConfusionMatrixDisplay(confusion_matrix= cm,
+                                  display_labels= best_model.classes_)
+    disp.plot()
+
+    plt.show()
+
+
+
+    # example_1_x = X[3]
+    # example_1_x = example_1_x.reshape(1,-1)
+
+    # example_2_x = X[86]
+    # example_2_x = example_2_x.reshape(1,-1)
+
+    # example_3_x = X[345]
+    # example_3_x = example_3_x.reshape(1,-1)
+
+    # example_1_y = y[3]
+    # example_2_y = y[86]
+    # example_3_y = y[345]
+
+    # example_1_pred = best_model.predict(example_1_x)
+    # example_2_pred = best_model.predict(example_2_x)
+    # example_3_pred = best_model.predict(example_3_x)
+
+    # print(example_1_y)
+    # print(label_encoder.inverse_transform(example_1_pred))
+
+    # print(example_2_y)
+    # print(label_encoder.inverse_transform(example_2_pred))
+
+    # print(example_3_y)
+    # print(label_encoder.inverse_transform(example_3_pred))

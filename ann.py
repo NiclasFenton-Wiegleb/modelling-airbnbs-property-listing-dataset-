@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torcheval.metrics import R2Score
 import itertools, os, json, math, yaml
+import numpy as np
 
 class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __init__(self, label_variable, normalise: bool =False):
@@ -16,6 +17,22 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
         to normalise the feature values.'''
         super().__init__()
         data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
+        # Dection of outliers
+        # IQR
+        # Calculate the upper and lower limits
+        Q1 = data['Price_Night'].quantile(0.25)
+        Q3 = data['Price_Night'].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5*IQR
+        upper = Q3 + 1.5*IQR
+        
+        # Create arrays of Boolean values indicating the outlier rows
+        upper_array = np.where(data['Price_Night']>=upper)[0]
+        lower_array = np.where(data['Price_Night']<=lower)[0]
+        
+        # Removing the outliers
+        data.drop(index=upper_array, inplace=True)
+        data.drop(index=lower_array, inplace=True)
         X, y = tabular_data.load_airbnb(data, label_variable)
         if normalise == True:
             n_features = X.shape[1]
@@ -391,7 +408,7 @@ def get_rmse_r2(model, dataloader, batch_size):
 
 if __name__ == "__main__":
 
-    label_variable = "bedrooms"
+    label_variable = "Price_Night"
     
     data = AirbnbNightlyPriceRegressionDataset(label_variable, normalise= True)
 
@@ -406,27 +423,28 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_data, batch_size= batch_size, shuffle= True, drop_last= True)
 
     hyperparameter_dict = {
-        "optimiser": ["torch.optim.Adam", "torch.optim.SGD"],
-        "learning_rate": [0.0005, 0.001, 0.0001],
-        "hidden_layer_width": [16, 32, 128],
-        "model_depth": [15, 30, 50],
+        "optimiser": ["torch.optim.Adam"],
+        "learning_rate": [0.0005],
+        "hidden_layer_width": [16],
+        "model_depth": [50],
         "n_epochs": [30]
     }
 
     directory = "./models/ANN/regression/{}".format(label_variable)
 
-    best_model, best_hyperparameters, best_performance_metrics, filepath = load_best_model(directory= directory, criterion= "validation_RMSE")
+    # best_model, best_hyperparameters, best_performance_metrics, filepath = load_best_model(directory= directory, criterion= "validation_RMSE")
 
-    print(best_hyperparameters)
-    print(best_performance_metrics)
-    print(filepath)
+    # print(best_hyperparameters)
+    # print(best_performance_metrics)
+    # print(filepath)
 
-    # find_best_nn(
-    #     hyperparameter_dict= hyperparameter_dict,
-    #     model_class= ANNModel,
-    #     label_variable= label_variable,
-    #     train_loader= train_loader,
-    #     val_loader= validation_loader,
-    #     test_loader= test_loader,
-    #     batch_size= batch_size
-    # )
+
+    find_best_nn(
+        hyperparameter_dict= hyperparameter_dict,
+        model_class= ANNModel,
+        label_variable= label_variable,
+        train_loader= train_loader,
+        val_loader= validation_loader,
+        test_loader= test_loader,
+        batch_size= batch_size
+    )

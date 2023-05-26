@@ -74,9 +74,9 @@ The list of dictionaries used can be found in the appendix below.
 
 All of the best performing models for each model class were saved to the directory ./models/classification, along with their hyperparameters and performance metrics. The best performing model was another random forest ensemble model: RandomForestClassifier, with the following hyperparameters:
 
-criterion: log_loss
-max_depth: 20
-n_estimators: 150
+- criterion: log_loss
+- max_depth: 20
+- n_estimators: 150
 
 The corresponding performance metrics are listed below:
 
@@ -113,10 +113,10 @@ A good way of visualising how well a model performs is by using a confusion matr
 
 Legend:
 
-0 = Amazing pools;
-1 = Beachfront;
-2 = Chalets;
-3 = Offbeat;
+0 = Amazing pools; 
+1 = Beachfront; 
+2 = Chalets; 
+3 = Offbeat; 
 4 = Treehouses;
 
 ## ANN Regression Model
@@ -135,9 +135,13 @@ hyperparameter_dict = {
     }
 ```
 
+In this particular framework, the hiddenlayers are all the same size, for simplicity. You can find the architecture of the model trained to predict the price per night below:
+
+INSERT ARCHITECTURE SKETCH
+
 To stay consistent with the regression ML models in the section above, the validation RMSE was used to select the best performing model. You can find the performance metrics for the best model for each investigated feature below:
 
-Price per night:
+**Price per night**:
 
 Criterion| Training Set | Validation Set | Test Set 
 --- | --- | --- | --- 
@@ -147,7 +151,8 @@ R<sup>2</sup> score| -0.03 | -0.01 | -0.08
 - Training duration (s): 6.74
 - Inference latency (s): 2.6569
 
-Number of bedrooms:
+
+**Number of bedrooms**:
 
 Criterion| Training Set | Validation Set | Test Set 
 --- | --- | --- | --- 
@@ -157,7 +162,8 @@ R<sup>2</sup> score| 0.82 | 0.89 | 0.75
 - Training duration (s): 196.94
 - Inference latency (s): 0.0063
 
-Accuracy rating:
+
+**Accuracy rating**:
 
 Criterion| Training Set | Validation Set | Test Set 
 --- | --- | --- | --- 
@@ -167,18 +173,46 @@ R<sup>2</sup> score| 0.60 | 0.56 | 0.67
 - Training duration (s): 77.75
 - Inference latency (s): 0.0008
 
+**Tensorboard**
 
-'''
-Update documentation:
-    - model architecture
-    - how it was used
-    - screenshots of tensorboard graphs
-    - show training for all models then focus in on best paramterised model
-    - use this link (https://alexlenail.me/NN-SVG/) to generate diagram of ANN
-    - Limitations of ANN
-    - Comparision to ML regression model
+Price per night:
+<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
 
-'''
+
+Number of bedrooms:
+<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
+
+
+Accuracy rating:
+<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
+
+
+
+
+The hyperparameters for each of the models above can be found int he appendix below. When taking a closer look at the perfomance stats, we can see that the last two perform fairly well, while the model for prediciting the price per night is not doing as well. What's particularly interesting is that the random forest regression model we trained earlier easily outperforms our neural network model. This is an important point to take that ANNs are not necessarily necessary or the best way to solve a problem.
+
+When we think back to our initial investigation of the dataset, we remember that the data for the Price_Night variable was skewed and had a few outliers. We were able to amend this by removing the outliers from the data.
+
+If we now train a model to predict the price per night with exactly the same hyperparameter settings as the best model we've trained so far for this task, we can see a drastic improvement!
+
+The performance stats for the model without outliers are as follows:
+
+**Price per night**:
+
+Criterion| Training Set | Validation Set | Test Set 
+--- | --- | --- | --- 
+RMSE| 63.221 | 53.231 | 67.764
+R<sup>2</sup> score| -0.02 | -0.01 | -0.01
+
+- Training duration (s): 7.315
+- Inference latency (s): 0.00005
+
+
+
+However, we still can't beat the ML model from the first section.
+
+
+
 
 ## Apendix
 
@@ -273,4 +307,28 @@ model_list = [
 ```
 
 ### ANN Regression
+
+Price-per-night model hyperparameters:
+
+- Optimiser: torch.optim.Adam
+- Learning_rate: 0.0005
+- Hidden_layer_width: 16
+- Model_depth: 50
+- N_epochs: 30
+
+Number-of-bedrooms model hyperparameters:
+
+- Optimiser: torch.optim.Adam
+- Learning_rate: 0.0005
+- Hidden_layer_width: 32
+- Model_depth: 30
+- N_epochs: 30
+
+Accuracy-rating model hyperparameters:
+
+- Optimiser: torch.optim.Adam
+- Learning_rate: 0.001
+- Hidden_layer_width: 128
+- Model_depth: 15
+- N_epochs: 30
 

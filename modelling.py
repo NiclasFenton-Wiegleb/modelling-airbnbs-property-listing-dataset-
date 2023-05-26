@@ -414,20 +414,32 @@ if __name__ == "__main__":
 
     best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "accuracy_score_validation")
 
+    label_1 = np.array([0])
+    label_2 = np.array([1])
+    label_3 = np.array([2])
+    label_4 = np.array([3])
+    label_5 = np.array([4])
+    print(label_encoder.inverse_transform(label_1))
+    print(label_encoder.inverse_transform(label_2))
+    print(label_encoder.inverse_transform(label_3))
+    print(label_encoder.inverse_transform(label_4))
+    print(label_encoder.inverse_transform(label_5))
+
+
     # print(type(best_model).__name__)
     # print(best_hyperparameters)
     # print(best_performance_metrics )
     # print(best_model.n_features_in_)
 
-    print(X.shape)
+    # print(X.shape)
 
-    y_pred = best_model.predict(X)
-    cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)
-    disp = ConfusionMatrixDisplay(confusion_matrix= cm,
-                                  display_labels= best_model.classes_)
-    disp.plot()
+    # y_pred = best_model.predict(X)
+    # cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)
+    # disp = ConfusionMatrixDisplay(confusion_matrix= cm,
+    #                               display_labels= best_model.classes_)
+    # disp.plot()
 
-    plt.show()
+    # plt.show()
 
 
 

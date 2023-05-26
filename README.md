@@ -188,29 +188,34 @@ n_estimators: 150
 
 The corresponding performance metrics are listed below:
 
-f1_score_training: 0.99
-f1_score_validation: 1.0
-f1_score_test: 1.0
+-f1_score_training: 0.99
+-f1_score_validation: 1.0
+-f1_score_test: 1.0
 
-precision_score_training: 0.99
-precision_score_validation: 1.0
-precision_score_test: 1.0
+-precision_score_training: 0.99
+-precision_score_validation: 1.0
+-precision_score_test: 1.0
 
-recall_score_training: 0.99
-recall_score_validation: 1.0
-recall_score_test: 1.0
+-recall_score_training: 0.99
+-recall_score_validation: 1.0
+-recall_score_test: 1.0
 
-accuracy_score_training: 0.99
-accuracy_score_validation: 1.0
-accuracy_score_test: 1.0
+-accuracy_score_training: 0.99
+-accuracy_score_validation: 1.0
+-accuracy_score_test: 1.0
 
 We can see that the model scored very highly, which means we should be consious it might have overfitted the dataset. With classifiers, we can increase the number of k-folds used in cross-validation. The other points mentioned for regression models above also apply, especially increasing the size of the dataset.
 
 A good way of visualising how well a model performs is by using a confusion matrix for each category. This type of graph shows the number of predictions made by the model that are true positives,false positives, true negatives and false negatives. You can see the confusion matrices for the best performing random forest model below.
 
-![alt text](./models/classification/RandomForestClassifier_ConfusionMatrix.png title="Confusion Matrix")
 <img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
 
+Legend:
+0 = Amazing pools
+1 = Beachfront
+2 = Chalets
+3 = Offbeat
+4 = Treehouses
 
 ## ANN Regression Model
 

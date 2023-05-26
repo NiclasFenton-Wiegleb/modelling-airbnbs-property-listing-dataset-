@@ -188,17 +188,17 @@ n_estimators: 150
 
 The corresponding performance metrics are listed below:
 
--f1_score_training: 0.99
--f1_score_validation: 1.0
--f1_score_test: 1.0
+- f1_score_training: 0.99
+- f1_score_validation: 1.0
+- f1_score_test: 1.0
 
--precision_score_training: 0.99
--precision_score_validation: 1.0
--precision_score_test: 1.0
+- precision_score_training: 0.99
+- precision_score_validation: 1.0
+- precision_score_test: 1.0
 
--recall_score_training: 0.99
--recall_score_validation: 1.0
--recall_score_test: 1.0
+- recall_score_training: 0.99
+- recall_score_validation: 1.0
+- recall_score_test: 1.0
 
 -accuracy_score_training: 0.99
 -accuracy_score_validation: 1.0

@@ -408,7 +408,7 @@ def get_rmse_r2(model, dataloader, batch_size):
 
 if __name__ == "__main__":
 
-    label_variable = "Price_Night"
+    label_variable = "Accuracy_rating"
     
     data = AirbnbNightlyPriceRegressionDataset(label_variable, normalise= True)
 
@@ -432,19 +432,19 @@ if __name__ == "__main__":
 
     directory = "./models/ANN/regression/{}".format(label_variable)
 
-    # best_model, best_hyperparameters, best_performance_metrics, filepath = load_best_model(directory= directory, criterion= "validation_RMSE")
+    best_model, best_hyperparameters, best_performance_metrics, filepath = load_best_model(directory= directory, criterion= "validation_RMSE")
 
-    # print(best_hyperparameters)
-    # print(best_performance_metrics)
-    # print(filepath)
+    print(best_hyperparameters)
+    print(best_performance_metrics)
+    print(filepath)
 
 
-    find_best_nn(
-        hyperparameter_dict= hyperparameter_dict,
-        model_class= ANNModel,
-        label_variable= label_variable,
-        train_loader= train_loader,
-        val_loader= validation_loader,
-        test_loader= test_loader,
-        batch_size= batch_size
-    )
+    # find_best_nn(
+    #     hyperparameter_dict= hyperparameter_dict,
+    #     model_class= ANNModel,
+    #     label_variable= label_variable,
+    #     train_loader= train_loader,
+    #     val_loader= validation_loader,
+    #     test_loader= test_loader,
+    #     batch_size= batch_size
+    # )

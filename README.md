@@ -178,15 +178,15 @@ R<sup>2</sup> score| 0.60 | 0.56 | 0.67
 **Tensorboard**
 
 Price per night:
-<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
+<img src="./models/ANN/Price_Night_tensorboard.png" alt="Alt text" title="Price-per-night model">
 
 
 Number of bedrooms:
-<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
+<img src="./models/ANN/bedrooms_tensorboard.png" alt="Alt text" title="Number-of-bedrooms model">
 
 
 Accuracy rating:
-<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
+<img src="./models/ANN/Accuracy_rating_tensorboard.png" alt="Alt text" title="Accuracy-rating model">
 
 
 

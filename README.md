@@ -108,14 +108,11 @@ In our case the random forest ensemble model performed best. The training, valid
 Example| #1 | #2 | #3 
 --- | --- | --- | --- 
 True values| 132.0 | 101.0 | 87.0
---- | --- | --- | --- 
 Model Predictions| 136.49 | 86.12 | 121.68
 
 From the above, we can see that the predictions are slightly off, but overall the performance of the model is convincing!
 
 Next, let's look at classifying listings into the correct categories.
-
-
 
 
 
@@ -196,12 +193,15 @@ The corresponding performance metrics are listed below:
 f1_score_training: 0.39759036144578314
 f1_score_validation: 0.4117647058823529
 f1_score_test: 0.48484848484848486
+
 precision_score_training: 0.39759036144578314
 precision_score_validation: 0.4117647058823529
 precision_score_test: 0.48484848484848486
+
 recall_score_training: 0.39759036144578314
 recall_score_validation: 0.4117647058823529
 recall_score_test: 0.48484848484848486
+
 accuracy_score_training: 0.39759036144578314
 accuracy_score_validation: 0.4117647058823529
 accuracy_score_test: 0.48484848484848486

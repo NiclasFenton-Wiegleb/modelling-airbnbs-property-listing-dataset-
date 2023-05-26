@@ -209,7 +209,7 @@ We can see that the model scored very highly, which means we should be consious 
 A good way of visualising how well a model performs is by using a confusion matrix for each category. This type of graph shows the number of predictions made by the model that are true positives,false positives, true negatives and false negatives. You can see the confusion matrices for the best performing random forest model below.
 
 ![alt text](./models/classification/RandomForestClassifier_ConfusionMatrix.png title="Confusion Matrix")
-
+<img src="./models/classification/RandomForestClassifier_ConfusionMatrix.png" alt="Alt text" title="Confusion Matrix">
 
 
 ## ANN Regression Model

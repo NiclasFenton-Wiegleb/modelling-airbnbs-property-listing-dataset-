@@ -15,6 +15,7 @@ import torch
 from datetime import datetime
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+import seaborn as sns
 # from ann import ANNModel
 
 
@@ -318,7 +319,7 @@ if __name__ == "__main__":
 
     data = pd.read_csv("./airbnb-property-listings/tabular_data/clean_tabular_data.csv")
     
-    X, y = load_airbnb(data, "Category")
+    X, y = load_airbnb(data, "Price_Night")
 
     # models_lst = [
     #     {
@@ -414,10 +415,30 @@ if __name__ == "__main__":
 
     best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "validation_RMSE")
 
-    print(type(best_model).__name__)
-    print(best_hyperparameters)
-    print(best_performance_metrics )
-    print(best_model.n_features_in_)
+    y_pred_list = []
+
+    for i in range(len(data)):
+        x = X[i]
+        x = x.reshape(1, -1)
+        y_pred = best_model.predict(x)
+        y_pred_list.append(y_pred.item())
+    
+    data['Predicted_PPN'] = y_pred_list
+
+    print(data.info())
+
+    # print(type(best_model).__name__)
+    # print(best_hyperparameters)
+    # print(best_performance_metrics )
+    # print(best_model.n_features_in_)
+
+
+    # sns.set_style('whitegrid')
+    # sns.kdeplot(data=data, x='Price_Night', fill=True)
+    # sns.despine()
+    # plt.show()
+
+
 
     # y_pred = best_model.predict(X)
     # cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)

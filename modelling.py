@@ -359,51 +359,51 @@ if __name__ == "__main__":
     #     }
     # ]
 
-    label_encoder = preprocessing.LabelEncoder()
+    # label_encoder = preprocessing.LabelEncoder()
 
-    label_encoder.fit(y)
-    y_transform = label_encoder.transform(y)
+    # label_encoder.fit(y)
+    # y_transform = label_encoder.transform(y)
 
-    model_list = [
-        {
-            "model_class": RandomForestClassifier,
-            "dataset": (X, y_transform),
-            "hyperparameters_dict": {
-                "n_estimators": [150, 200],
-                "criterion": ["gini", "entropy", "log_loss"],
-                "max_depth": [20, 50]
-            }
-        },
-        {
-            "model_class": GradientBoostingClassifier,
-            "dataset": (X, y_transform),
-            "hyperparameters_dict": {
-                "loss": ["log_loss", "deviance", "exponential"],
-                "learning_rate": [0.1, 0.2],
-                "n_estimators": [150, 200]
-            }
-        },
-        {
-            "model_class": DecisionTreeClassifier,
-            "dataset": (X, y_transform),
-            "hyperparameters_dict": {
-                "criterion": ["gini", "entropy", "log_loss"],
-                "max_depth": [20, 50],
-                "min_samples_split": [0.1, 0.15, 0.2]
-            }
-        },
-        {   "model_class": LogisticRegression,
-            "dataset": (X, y_transform),
-            "hyperparameters_dict":{
-                "penalty": ["l1", "l2", "elasticnet"],
-                "dual": [True, False],
-                "random_state": [0],
-                "solver": ["lbfgs", "liblinear", "newton-cg"]
-            }
-        }
-    ]
+    # model_list = [
+    #     {
+    #         "model_class": RandomForestClassifier,
+    #         "dataset": (X, y_transform),
+    #         "hyperparameters_dict": {
+    #             "n_estimators": [150, 200],
+    #             "criterion": ["gini", "entropy", "log_loss"],
+    #             "max_depth": [20, 50]
+    #         }
+    #     },
+    #     {
+    #         "model_class": GradientBoostingClassifier,
+    #         "dataset": (X, y_transform),
+    #         "hyperparameters_dict": {
+    #             "loss": ["log_loss", "deviance", "exponential"],
+    #             "learning_rate": [0.1, 0.2],
+    #             "n_estimators": [150, 200]
+    #         }
+    #     },
+    #     {
+    #         "model_class": DecisionTreeClassifier,
+    #         "dataset": (X, y_transform),
+    #         "hyperparameters_dict": {
+    #             "criterion": ["gini", "entropy", "log_loss"],
+    #             "max_depth": [20, 50],
+    #             "min_samples_split": [0.1, 0.15, 0.2]
+    #         }
+    #     },
+    #     {   "model_class": LogisticRegression,
+    #         "dataset": (X, y_transform),
+    #         "hyperparameters_dict":{
+    #             "penalty": ["l1", "l2", "elasticnet"],
+    #             "dual": [True, False],
+    #             "random_state": [0],
+    #             "solver": ["lbfgs", "liblinear", "newton-cg"]
+    #         }
+    #     }
+    # ]
 
-    directory = "./models/classification"
+    directory = "./models/regression"
 
     # best_model_type, best_model, best_hyperparameters, best_performance_metrics = evaluate_all_models(models_list= model_list,
     #                                                                         tune_function= tune_classification_model_hyperparameters,
@@ -412,20 +412,20 @@ if __name__ == "__main__":
 
 
 
-    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "accuracy_score_validation")
+    best_model, best_hyperparameters, best_performance_metrics = find_best_model(directory= directory, criterion= "validation_RMSE")
 
     print(type(best_model).__name__)
     print(best_hyperparameters)
     print(best_performance_metrics )
     print(best_model.n_features_in_)
 
-    y_pred = best_model.predict(X)
-    cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)
-    disp = ConfusionMatrixDisplay(confusion_matrix= cm,
-                                  display_labels= best_model.classes_)
-    disp.plot()
+    # y_pred = best_model.predict(X)
+    # cm = confusion_matrix(y_transform, y_pred, labels=best_model.classes_)
+    # disp = ConfusionMatrixDisplay(confusion_matrix= cm,
+    #                               display_labels= best_model.classes_)
+    # disp.plot()
 
-    plt.show()
+    # plt.show()
 
 
 

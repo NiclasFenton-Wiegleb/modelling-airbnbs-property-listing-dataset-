@@ -427,16 +427,21 @@ if __name__ == "__main__":
 
     print(data.info())
 
-    # print(type(best_model).__name__)
-    # print(best_hyperparameters)
-    # print(best_performance_metrics )
-    # print(best_model.n_features_in_)
+    print(type(best_model).__name__)
+    print(best_hyperparameters)
+    print(best_performance_metrics )
+    print(best_model.n_features_in_)
 
 
-    # sns.set_style('whitegrid')
-    # sns.kdeplot(data=data, x='Price_Night', fill=True)
-    # sns.despine()
-    # plt.show()
+    sns.set_style('whitegrid')
+    # fig = sns.kdeplot(data=data['Predicted_PPN'], fill=True, color='b')
+    # fig = sns.kdeplot(data=data['Price_Night'], fill=True, color='r')
+    ax = sns.kdeplot(data=data['Predicted_PPN'], fill= True, legend=True)
+    sns.kdeplot(data=data['Price_Night'], fill=True, legend=True, ax=ax)
+    sns.despine()
+    plt.xlabel('Price Per Night')
+    plt.ylabel('Frequency')
+    plt.show()
 
 
 

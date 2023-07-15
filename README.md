@@ -53,7 +53,7 @@ One of the dangers of training ML models it overfitting, and some model classes 
 
 In our case the random forest ensemble model performed best. The training, validation and test RMSEs are not too far apart, which indicates the model does well at generalising. A good way to visualise this is by looking at the overlap of the real distribution of data compared to:
 
-<img src="./regression_model_distribution.png" alt="A graph showing the real distribution of the price-per-night data and the distribution predicted by the model." title="Real and predicted data distribution overlap">
+<img src="./models/regression/regression_model_distributions.png" alt="A graph showing the real distribution of the price-per-night data and the distribution predicted by the model." title="Real and predicted data distribution overlap">
 
 
 From the above, we can see that the model can predict to a larg degree the distribution of real datapoints, making a convincing case for its accuracy!

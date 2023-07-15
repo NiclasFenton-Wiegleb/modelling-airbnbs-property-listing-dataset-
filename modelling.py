@@ -434,10 +434,10 @@ if __name__ == "__main__":
 
 
     sns.set_style('whitegrid')
-    # fig = sns.kdeplot(data=data['Predicted_PPN'], fill=True, color='b')
-    # fig = sns.kdeplot(data=data['Price_Night'], fill=True, color='r')
-    ax = sns.kdeplot(data=data['Predicted_PPN'], fill= True, legend=True)
-    sns.kdeplot(data=data['Price_Night'], fill=True, legend=True, ax=ax)
+    fig = sns.kdeplot(data['Predicted_PPN'], fill=True, color='b')
+    fig = sns.kdeplot(data['Price_Night'], fill=True, color='r')
+    # ax = sns.kdeplot(data['Predicted_PPN'], fill= True, legend=True)
+    # sns.kdeplot(data['Price_Night'], fill=True, legend=True, ax=ax)
     sns.despine()
     plt.xlabel('Price Per Night')
     plt.ylabel('Frequency')

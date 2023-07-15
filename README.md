@@ -51,14 +51,12 @@ And the performance metrics:
 
 One of the dangers of training ML models it overfitting, and some model classes are more prone to this than others. For example, in one of the earlier runs of the code, decision trees achieved a 0.0 validation RMSE, which is a strong indication that the model is overfitting. To counteract this, we introduce a minimum number of samples per leaf, which reduces the complexity of the generated tree. It is then harder for the algorithm to overfit. Ensemble models, for example random forest, also reduce the risk of overfitting further. Finally, another measure we can use is to increase the size of our dataset.
 
-In our case the random forest ensemble model performed best. The training, validation and test RMSEs are not too far apart, which indicates the model does well at generalising. Let's use a few examples to see how it performs:
+In our case the random forest ensemble model performed best. The training, validation and test RMSEs are not too far apart, which indicates the model does well at generalising. A good way to visualise this is by looking at the overlap of the real distribution of data compared to:
 
-Example| #1 | #2 | #3 
---- | --- | --- | --- 
-True values| 132.0 | 101.0 | 87.0
-Model Predictions| 136.49 | 86.12 | 121.68
+<img src="./regression_model_distribution.png" alt="A graph showing the real distribution of the price-per-night data and the distribution predicted by the model." title="Real and predicted data distribution overlap">
 
-From the above, we can see that the predictions are slightly off, but overall the performance of the model is convincing!
+
+From the above, we can see that the model can predict to a larg degree the distribution of real datapoints, making a convincing case for its accuracy!
 
 Next, let's look at classifying listings into the correct categories.
 
